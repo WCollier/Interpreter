@@ -7,7 +7,7 @@ pub(crate) enum StackKind {
     Block,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub(crate) enum StackErrorKind {
     StackOverflow,
     StackUnderflow,
