@@ -1,17 +1,17 @@
 pub(crate) type Result<T = ()> = std::result::Result<T, ErrorKind>;
 
 mod eval;
+mod frame;
 mod instr;
 mod inter;
 mod stack;
 mod value;
-mod frame;
 
 use crate::{
-    instr::{Instr, BinopKind, CompareKind},
+    instr::Instr,
     inter::Inter,
+    stack::{StackErrorKind, StackKind},
     value::Value,
-    stack::{StackKind, StackErrorKind},
 };
 
 #[derive(Clone, Debug)]
@@ -34,6 +34,7 @@ fn main() -> Result {
      *
      *     i += 1
      */
+    /*
     inter.push_instrs(&[
         // i = 0
         Instr::Push(Value::Int(0)),
@@ -59,6 +60,14 @@ fn main() -> Result {
         Instr::Jump(2),
 
         Instr::Exit,
+    ]);
+    */
+
+    inter.push_instrs(&[
+        Instr::Push(Value::Int(400)),
+        Instr::Store("x".into()),
+        Instr::Load("x".into()),
+        Instr::Print,
     ]);
 
     inter.run()
