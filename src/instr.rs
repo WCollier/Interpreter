@@ -1,4 +1,4 @@
-use crate::{value::Value, frame::Block};
+use crate::value::Value;
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum CompareKind {
@@ -42,9 +42,9 @@ pub(crate) enum Instr {
 
 #[cfg(test)]
 mod test {
-    use crate::{Inter, Result};
+    use crate::{frame::Frame, Inter, Result};
 
-    use super::{BinopKind, CompareKind, Instr, UnaryKind, Value, Block};
+    use super::{BinopKind, CompareKind, Instr, UnaryKind, Value};
 
     fn test_instrs(instrs: &[Instr]) -> Result<Inter> {
         let mut inter = Inter::new()?;
@@ -56,12 +56,19 @@ mod test {
         Ok(inter)
     }
 
-    /*
+    pub(crate) fn top_frame(inter: &Inter) -> Result<&Frame> {
+        inter.frames.top()
+    }
+
+    fn top_frame_mut(inter: &mut Inter) -> Result<&mut Frame> {
+        inter.frames.top_mut()
+    }
+
     #[test]
     fn push_works() -> Result {
         let inter = test_instrs(&[Instr::Push(Value::Int(400))])?;
 
-        assert_eq!(inter.top_frame()?.vals.top()?, &Value::Int(400));
+        assert_eq!(top_frame(&inter)?.vals.top()?, &Value::Int(400));
 
         Ok(())
     }
@@ -77,7 +84,7 @@ mod test {
             Instr::Exit,
         ])?;
 
-        assert_eq!(inter.top_frame()?.vals.top()?, &Value::Int(800));
+        assert_eq!(top_frame(&inter)?.vals.top()?, &Value::Int(800));
 
         Ok(())
     }
@@ -86,7 +93,7 @@ mod test {
     fn pop_works() -> Result {
         let inter = test_instrs(&[Instr::Push(Value::Int(400)), Instr::Pop])?;
 
-        assert!(inter.top_frame()?.vals.is_empty());
+        assert!(top_frame(&inter)?.vals.is_empty());
 
         Ok(())
     }
@@ -129,17 +136,17 @@ mod test {
             Instr::Binop(BinopKind::Or),
         ])?;
 
-        assert_eq!(plus_inter.top_frame()?.vals.top()?, &Value::Int(800));
+        assert_eq!(top_frame(&plus_inter)?.vals.top()?, &Value::Int(800));
 
-        assert_eq!(minus_inter.top_frame()?.vals.top()?, &Value::Int(0));
+        assert_eq!(top_frame(&minus_inter)?.vals.top()?, &Value::Int(0));
 
-        assert_eq!(times_inter.top_frame()?.vals.top()?, &Value::Int(160000));
+        assert_eq!(top_frame(&times_inter)?.vals.top()?, &Value::Int(160000));
 
-        assert_eq!(divide_inter.top_frame()?.vals.top()?, &Value::Int(1));
+        assert_eq!(top_frame(&divide_inter)?.vals.top()?, &Value::Int(1));
 
-        assert_eq!(and_inter.top_frame()?.vals.top()?, &Value::Bool(true));
+        assert_eq!(top_frame(&and_inter)?.vals.top()?, &Value::Bool(true));
 
-        assert_eq!(or_inter.top_frame()?.vals.top()?, &Value::Bool(true));
+        assert_eq!(top_frame(&or_inter)?.vals.top()?, &Value::Bool(true));
 
         Ok(())
     }
@@ -149,7 +156,7 @@ mod test {
         let not_inter =
             test_instrs(&[Instr::Push(Value::Bool(true)), Instr::Unary(UnaryKind::Not)])?;
 
-        assert_eq!(not_inter.top_frame()?.vals.top()?, &Value::Bool(false));
+        assert_eq!(top_frame(&not_inter)?.vals.top()?, &Value::Bool(false));
 
         Ok(())
     }
@@ -181,9 +188,9 @@ mod test {
             Instr::Compare(CompareKind::NotEqual),
         ])?;
 
-        assert_eq!(equal_inter.top_frame()?.vals.top()?, &Value::Bool(true));
+        assert_eq!(top_frame(&equal_inter)?.vals.top()?, &Value::Bool(true));
 
-        assert_eq!(ne_equal_inter.top_frame()?.vals.top()?, &Value::Bool(false));
+        assert_eq!(top_frame(&ne_equal_inter)?.vals.top()?, &Value::Bool(false));
 
         Ok(())
     }
@@ -207,7 +214,7 @@ mod test {
             Instr::Exit,
         ])?;
 
-        assert_eq!(inter.top_frame()?.vals.top()?, &Value::Int(100));
+        assert_eq!(top_frame(&inter)?.vals.top()?, &Value::Int(100));
 
         Ok(())
     }
@@ -233,7 +240,7 @@ mod test {
 
         // By this point, 400, 400, and the true should've been popped,
         // leaving the stack empty
-        assert!(inter.top_frame()?.vals.is_empty());
+        assert!(top_frame(&inter)?.vals.is_empty());
 
         Ok(())
     }
@@ -243,12 +250,13 @@ mod test {
         /*
          * x = 100
          */
-        let inter = test_instrs(&[
-            Instr::Push(Value::Int(400)),
-            Instr::Store("x".into()),
-        ])?;
+        let inter = test_instrs(&[Instr::Push(Value::Int(400)), Instr::Store("x".into())])?;
 
-        assert!(inter.top_frame()?.locals.contains_key("x".into()));
+        assert!(top_frame(&inter)?
+            .blocks
+            .top()?
+            .locals
+            .contains_key("x".into()));
 
         Ok(())
     }
@@ -258,10 +266,7 @@ mod test {
         /*
          * x = 100
          */
-        let inter = test_instrs(&[
-            Instr::Push(Value::Int(400)),
-            Instr::StoreGlobal("x".into()),
-        ])?;
+        let inter = test_instrs(&[Instr::Push(Value::Int(400)), Instr::StoreGlobal("x".into())])?;
 
         assert!(inter.evaler.globals.contains_key("x".into()));
 
@@ -280,11 +285,10 @@ mod test {
             Instr::Load("x".into()),
         ])?;
 
-        assert_eq!(inter.top_frame()?.vals.top()?, &Value::Int(400));
+        assert_eq!(top_frame(&inter)?.vals.top()?, &Value::Int(400));
 
         Ok(())
     }
-    */
 
     #[test]
     fn setup_loop_works() -> Result {
@@ -293,43 +297,39 @@ mod test {
          *
          * i = 0
          * while i != 3 {
-         *   x = 4 
+         *   x = 4
          *   i++
          * }
          */
         let inter = test_instrs(&[
             // i = 0
             Instr::Push(Value::Int(0)), // 0
-            Instr::Store("i".into()), // 1
-
+            Instr::Store("i".into()),   // 1
             // while
             Instr::SetupLoop(15), // 2
-
             // i != 3
-            Instr::Load("i".into()), // 3
-            Instr::Push(Value::Int(3)), // 4
+            Instr::Load("i".into()),               // 3
+            Instr::Push(Value::Int(3)),            // 4
             Instr::Compare(CompareKind::NotEqual), // 5
-            Instr::PopJumpFalse(14), // 6
-
+            Instr::PopJumpFalse(14),               // 6
             // x = 4
             Instr::Push(Value::Int(4)), // 7
-            Instr::Store("x".into()), // 8
-
+            Instr::Store("x".into()),   // 8
             // i++
-            Instr::Load("i".into()), // 9
-            Instr::Push(Value::Int(1)), // 10
+            Instr::Load("i".into()),       // 9
+            Instr::Push(Value::Int(1)),    // 10
             Instr::Binop(BinopKind::Plus), // 11
-            Instr::Store("i".into()), // 12 
-
-            Instr::Jump(3), // 13
-
-            Instr::PopBlock, // 14
-            Instr::Exit // 15
+            Instr::Store("i".into()),      // 12
+            Instr::Jump(3),                // 13
+            Instr::PopBlock,               // 14
+            Instr::Exit,                   // 15
         ])?;
 
-        //println!("{:#?}", inter);
-
-        //assert(inter.
+        assert!(top_frame(&inter)?
+            .blocks
+            .top()?
+            .locals
+            .contains_key("i".into()));
 
         Ok(())
     }
