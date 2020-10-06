@@ -4,7 +4,7 @@ use crate::{ErrorKind, Result};
 pub(crate) enum StackKind {
     Value,
     Frame,
-    Block,
+    Scope,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]

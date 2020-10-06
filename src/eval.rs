@@ -1,7 +1,7 @@
 use std::{collections::HashMap, default};
 
 use crate::{
-    frame::{Block, Frame},
+    frame::{Scope, Frame},
     instr::{BinopKind, CompareKind, UnaryKind},
     stack::Stack,
     ErrorKind, Instr, Result, Value,
@@ -152,13 +152,11 @@ impl Evaluator {
                 }
             },
             */
-            Instr::SetupLoop(after_instr) => {
-                frame.blocks.push(Block::new(frame.vals.len(), after_instr))
+            Instr::PushScope(after_instr) => {
+                frame.blocks.push(Scope::new(frame.vals.len(), after_instr))
             }
 
-            Instr::PopBlock => {
-                //println!("Block {:?}", frame.blocks.len());
-
+            Instr::PopScope => {
                 let block = frame.blocks.pop()?;
 
                 frame.vals.truncate(block.stack_level);

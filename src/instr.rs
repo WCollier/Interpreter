@@ -36,8 +36,8 @@ pub(crate) enum Instr {
     Store(String),
     StoreGlobal(String),
     Load(String),
-    SetupLoop(usize),
-    PopBlock,
+    PushScope(usize),
+    PopScope,
 }
 
 #[cfg(test)]
@@ -306,7 +306,7 @@ mod test {
             Instr::Push(Value::Int(0)), // 0
             Instr::Store("i".into()),   // 1
             // while
-            Instr::SetupLoop(15), // 2
+            Instr::PushScope(15), // 2
             // i != 3
             Instr::Load("i".into()),               // 3
             Instr::Push(Value::Int(3)),            // 4
@@ -321,7 +321,7 @@ mod test {
             Instr::Binop(BinopKind::Plus), // 11
             Instr::Store("i".into()),      // 12
             Instr::Jump(3),                // 13
-            Instr::PopBlock,               // 14
+            Instr::PopScope,               // 14
             Instr::Exit,                   // 15
         ])?;
 
@@ -330,6 +330,20 @@ mod test {
             .top()?
             .locals
             .contains_key("i".into()));
+
+        Ok(())
+    }
+
+    #[test]
+    fn pop_block_works() -> Result {
+        let inter = test_instrs(&[
+            Instr::Push(Value::Int(0)), // 0
+            Instr::PushScope(3), // 1 setup loop pushes a block
+            Instr::PopScope, // 2
+            Instr::Exit, // 3
+        ])?;
+
+        assert!(top_frame(&inter)?.blocks.len() == 1);
 
         Ok(())
     }

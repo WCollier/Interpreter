@@ -7,7 +7,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Block {
+pub(crate) struct Scope {
     // Represents the index of the stack at which the block is pushed
     pub(crate) stack_level: usize,
 
@@ -18,9 +18,9 @@ pub(crate) struct Block {
     pub(crate) locals: HashMap<String, Value>,
 }
 
-impl Block {
+impl Scope {
     pub(crate) fn new(stack_level: usize, after_instr: usize) -> Self {
-        Block {
+        Scope {
             stack_level,
             after_instr,
             locals: HashMap::new(),
@@ -31,19 +31,18 @@ impl Block {
 #[derive(Debug)]
 pub(crate) struct Frame {
     pub(crate) vals: Stack<Value>,
-    pub(crate) blocks: Stack<Block>,
+    pub(crate) blocks: Stack<Scope>,
 }
 
 impl Frame {
     pub(crate) fn new() -> Result<Self> {
         let mut frame = Self {
             vals: Stack::new(StackKind::Value),
-            blocks: Stack::new(StackKind::Block),
+            blocks: Stack::new(StackKind::Scope),
         };
 
-        // The frame needs an initial scope
-        // After-instr is not needed, I think
-        frame.blocks.push(Block::new(0, 0))?;
+        // The frame needs an initial scope. After-instr is not needed, I think
+        frame.blocks.push(Scope::new(0, 0))?;
 
         Ok(frame)
     }
