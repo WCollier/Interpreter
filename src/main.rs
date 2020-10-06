@@ -1,30 +1,21 @@
-pub(crate) type Result<T = ()> = std::result::Result<T, ErrorKind>;
+mod vm;
 
-mod eval;
-mod frame;
-mod instr;
-mod inter;
-mod stack;
-mod value;
-
-use crate::{
-    instr::{Instr, CompareKind, BinopKind},
+use crate::vm::{
+    instr::{BinopKind, CompareKind, Instr},
     inter::Inter,
-    stack::{StackErrorKind, StackKind},
     value::Value,
+    ErrorKind as VmErrorKind,
 };
 
-#[derive(Clone, Debug)]
+type Result<T = ()> = std::result::Result<T, ErrorKind>;
+
+#[derive(Debug)]
 pub(crate) enum ErrorKind {
-    StackError(StackKind, StackErrorKind),
-    InvalidBinop { instr: Instr, l: Value, r: Value },
-    InvalidUnary { instr: Instr, val: Value },
-    InvalidJumpValue(Value),
-    UnknownConst(String),
+    VmError(VmErrorKind),
 }
 
 fn main() -> Result {
-    let mut inter = Inter::new()?;
+    let mut inter = Inter::new().map_err(|err| ErrorKind::VmError(err))?;
 
     /*
      * i = 0
@@ -38,26 +29,21 @@ fn main() -> Result {
         // i = 0
         Instr::Push(Value::Int(0)),
         Instr::Store("i".into()),
-
         // while i != 3
         Instr::Load("i".into()),
         Instr::Push(Value::Int(3)),
         Instr::Compare(CompareKind::GreaterThan),
         Instr::PopJumpFalse(13),
-
         // print i
         Instr::Load("i".into()),
         Instr::Print,
-
         // i += 1
         Instr::Load("i".into()),
         Instr::Push(Value::Int(1)),
         Instr::Binop(BinopKind::Plus),
         Instr::Store("i".into()),
-
         // to start of loop
         Instr::Jump(2),
-
         Instr::Exit,
     ]);
 
@@ -70,5 +56,5 @@ fn main() -> Result {
     ]);
     */
 
-    inter.run()
+    inter.run().map_err(|err| ErrorKind::VmError(err))
 }

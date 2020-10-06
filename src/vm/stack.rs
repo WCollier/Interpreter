@@ -1,4 +1,4 @@
-use crate::{ErrorKind, Result};
+use super::{ErrorKind, Result};
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum StackKind {

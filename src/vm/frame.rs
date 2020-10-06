@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{
+use super::{
     stack::{Stack, StackKind},
     value::Value,
     Result,

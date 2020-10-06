@@ -1,10 +1,12 @@
 use std::{collections::HashMap, default};
 
-use crate::{
-    frame::{Scope, Frame},
+use super::{
+    frame::{Frame, Scope},
+    instr::Instr,
     instr::{BinopKind, CompareKind, UnaryKind},
     stack::Stack,
-    ErrorKind, Instr, Result, Value,
+    value::Value,
+    ErrorKind, Result,
 };
 
 #[derive(Debug)]

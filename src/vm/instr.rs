@@ -1,4 +1,4 @@
-use crate::value::Value;
+use super::value::Value;
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum CompareKind {
@@ -342,9 +342,9 @@ mod test {
     fn pop_block_works() -> Result {
         let inter = test_instrs(&[
             Instr::Push(Value::Int(0)), // 0
-            Instr::PushScope(3), // 1 setup loop pushes a block
-            Instr::PopScope, // 2
-            Instr::Exit, // 3
+            Instr::PushScope(3),        // 1 setup loop pushes a block
+            Instr::PopScope,            // 2
+            Instr::Exit,                // 3
         ])?;
 
         assert!(top_frame(&inter)?.blocks.len() == 1);

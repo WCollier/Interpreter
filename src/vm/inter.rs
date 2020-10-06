@@ -1,8 +1,9 @@
-use crate::{
+use super::{
     eval::Evaluator,
     frame::Frame,
+    instr::Instr,
     stack::{Stack, StackKind},
-    Instr, Result,
+    Result,
 };
 
 #[derive(Debug)]
