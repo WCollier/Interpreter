@@ -4,6 +4,10 @@ use crate::value::Value;
 pub(crate) enum CompareKind {
     Equal,
     NotEqual,
+    LessThan,
+    LassThanOrEqual,
+    GreaterThan,
+    GreaterThanOrEqual,
 }
 
 #[derive(Copy, Clone, Debug)]

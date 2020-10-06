@@ -99,6 +99,10 @@ impl Evaluator {
                 match kind {
                     CompareKind::Equal => frame.vals.push(Value::Bool(l == r))?,
                     CompareKind::NotEqual => frame.vals.push(Value::Bool(l != r))?,
+                    CompareKind::LessThan => frame.vals.push(Value::Bool(l < r))?,
+                    CompareKind::LassThanOrEqual => frame.vals.push(Value::Bool(l <= r))?,
+                    CompareKind::GreaterThan => frame.vals.push(Value::Bool(l > r))?,
+                    CompareKind::GreaterThanOrEqual => frame.vals.push(Value::Bool(l >= r))?,
                 };
 
                 Ok(())
