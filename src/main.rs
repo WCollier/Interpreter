@@ -8,7 +8,7 @@ mod stack;
 mod value;
 
 use crate::{
-    instr::Instr,
+    instr::{Instr, CompareKind, BinopKind},
     inter::Inter,
     stack::{StackErrorKind, StackKind},
     value::Value,
@@ -34,7 +34,6 @@ fn main() -> Result {
      *
      *     i += 1
      */
-    /*
     inter.push_instrs(&[
         // i = 0
         Instr::Push(Value::Int(0)),
@@ -61,14 +60,15 @@ fn main() -> Result {
 
         Instr::Exit,
     ]);
-    */
 
+    /*
     inter.push_instrs(&[
         Instr::Push(Value::Int(400)),
         Instr::Store("x".into()),
         Instr::Load("x".into()),
         Instr::Print,
     ]);
+    */
 
     inter.run()
 }
