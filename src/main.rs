@@ -29,7 +29,7 @@ fn main() -> Result {
     /*
      * i = 0
      *
-     * while i != 3:
+     * while i < 3:
      *     print(i)
      *
      *     i += 1
@@ -42,7 +42,7 @@ fn main() -> Result {
         // while i != 3
         Instr::Load("i".into()),
         Instr::Push(Value::Int(3)),
-        Instr::Compare(CompareKind::NotEqual),
+        Instr::Compare(CompareKind::GreaterThan),
         Instr::PopJumpFalse(13),
 
         // print i
