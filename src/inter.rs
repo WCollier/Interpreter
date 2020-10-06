@@ -1,4 +1,9 @@
-use crate::{eval::Evaluator, frame::Frame, stack::{Stack, StackKind}, Instr, Result};
+use crate::{
+    eval::Evaluator,
+    frame::Frame,
+    stack::{Stack, StackKind},
+    Instr, Result,
+};
 
 #[derive(Debug)]
 pub(crate) struct Inter {
@@ -15,7 +20,7 @@ impl Inter {
             frames: Stack::new(StackKind::Frame),
         };
 
-        inter.frames.push(Frame::default())?;
+        inter.frames.push(Frame::new()?)?;
 
         Ok(inter)
     }
@@ -41,13 +46,5 @@ impl Inter {
 
     fn push_instr(&mut self, instr: Instr) {
         self.instrs.push(instr);
-    }
-
-    pub(crate) fn top_frame(&self) -> Result<&Frame> {
-        self.frames.top()
-    }
-
-    fn top_frame_mut(&mut self) -> Result<&mut Frame> {
-        self.frames.top_mut()
     }
 }

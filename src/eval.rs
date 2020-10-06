@@ -1,9 +1,9 @@
 use std::{collections::HashMap, default};
 
 use crate::{
+    frame::{Block, Frame},
     instr::{BinopKind, CompareKind, UnaryKind},
-    stack::{Stack, StackErrorKind},
-    frame::{Frame, Block},
+    stack::Stack,
     ErrorKind, Instr, Result, Value,
 };
 
@@ -106,26 +106,21 @@ impl Evaluator {
             Instr::PopJumpFalse(new_pc) => self.eval_pop_jump(frame, new_pc, |val| !val),
             Instr::PopJumpTrue(new_pc) => self.eval_pop_jump(frame, new_pc, |val| val),
             Instr::Store(ref name) => {
-                /*
-                 * TODO: Try and remove clone() here
-                 * There might be a current scope, but if not load from the 
-                 * frame scope (i.e. top_mut() returns StackUnderflow), then insert
-                 * into the map
-                 */
-                match frame.blocks.top_mut() {
-                    Ok(block) => {
-                        block.locals.insert(name.to_string(), frame.vals.pop()?);
+                // TODO: Try and remove clone() here
+                //frame.blocks.top_mut()?.locals.insert(name.to_string(), frame.vals.pop()?);
+                let top = frame.vals.pop()?;
+
+                match frame.get_local_mut(name) {
+                    Some(local) => {
+                        *local = top;
 
                         Ok(())
                     }
-                    Err(ErrorKind::StackError(_, stack_error_kind)) if stack_error_kind == StackErrorKind::StackUnderflow => {
-
-                        frame.frame_locals.insert(name.to_string(), frame.vals.pop()?);
+                    None => {
+                        frame.blocks.top_mut()?.locals.insert(name.to_string(), top);
 
                         Ok(())
                     }
-
-                    Err(err) => Err(err)
                 }
             }
             Instr::StoreGlobal(ref name) => {
@@ -134,9 +129,17 @@ impl Evaluator {
 
                 Ok(())
             }
-            Instr::Load(ref name) => match frame.get_local(name) {
-                Some(val) => frame.vals.push(val.clone()),
-                None => Err(ErrorKind::UnknownConst(name.to_string()))
+            Instr::Load(ref name) => {
+                // Clone here to prevent compiler errors
+                let val = frame.get_local(name).and_then(|val| Some(val.clone()));
+
+                match val {
+                    Some(val) => frame.vals.push(val),
+                    None => match self.globals.get(name) {
+                        Some(val) => frame.vals.push(val.clone()),
+                        None => Err(ErrorKind::UnknownConst(name.to_string())),
+                    },
+                }
             }
             /*
             // TODO: Is this correct?
@@ -149,10 +152,13 @@ impl Evaluator {
                 }
             },
             */
-            Instr::SetupLoop(after_instr) => 
-                frame.blocks.push(Block::new(frame.vals.len(), after_instr)),
+            Instr::SetupLoop(after_instr) => {
+                frame.blocks.push(Block::new(frame.vals.len(), after_instr))
+            }
 
             Instr::PopBlock => {
+                //println!("Block {:?}", frame.blocks.len());
+
                 let block = frame.blocks.pop()?;
 
                 frame.vals.truncate(block.stack_level);

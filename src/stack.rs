@@ -1,4 +1,4 @@
-use crate::{Result, ErrorKind};
+use crate::{ErrorKind, Result};
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) enum StackKind {
@@ -15,13 +15,16 @@ pub(crate) enum StackErrorKind {
 
 #[derive(Debug)]
 pub(crate) struct Stack<T> {
-    stack: Vec<T>,
+    pub(crate) stack: Vec<T>,
     kind: StackKind,
 }
 
 impl<T> Stack<T> {
     pub(crate) fn new(kind: StackKind) -> Stack<T> {
-        Stack { stack: vec![], kind }
+        Stack {
+            stack: vec![],
+            kind,
+        }
     }
 
     pub(crate) fn push(&mut self, value: T) -> Result {
@@ -31,9 +34,7 @@ impl<T> Stack<T> {
     }
 
     pub(crate) fn pop(&mut self) -> Result<T> {
-        self.stack
-            .pop()
-            .ok_or_else(|| self.determine_stack_error())
+        self.stack.pop().ok_or_else(|| self.determine_stack_error())
     }
 
     pub(crate) fn top(&self) -> Result<&T> {
@@ -45,8 +46,7 @@ impl<T> Stack<T> {
     pub(crate) fn top_mut(&mut self) -> Result<&mut T> {
         let err = self.determine_stack_error();
 
-        self.stack.last_mut()
-            .ok_or_else(|| err)
+        self.stack.last_mut().ok_or_else(|| err)
     }
 
     pub(crate) fn is_empty(&self) -> bool {
@@ -64,7 +64,6 @@ impl<T> Stack<T> {
     fn determine_stack_error(&self) -> ErrorKind {
         if self.is_empty() {
             ErrorKind::StackError(self.kind, StackErrorKind::StackUnderflow)
-
         } else {
             ErrorKind::StackError(self.kind, StackErrorKind::StackOverflow)
         }
