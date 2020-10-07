@@ -1,5 +1,5 @@
 use crate::{
-    ast::{BinopKind, Expr},
+    ast::{BinopKind, Expr, Stmt},
     lexer::Token,
 };
 
@@ -20,18 +20,29 @@ impl Parser {
         Self { tokens }
     }
 
-    pub(crate) fn parse(&self) -> Result<Vec<Expr>> {
+    pub(crate) fn parse(&self) -> Result<Vec<Stmt>> {
         let mut exprs = vec![];
 
-        let mut parsed = self.parse_expr(&self.tokens, 0);
+        let mut parsed = self.parse_binding(&self.tokens, 0);
 
         while let Ok((expr, pos)) = parsed {
             exprs.push(expr);
 
-            parsed = self.parse_expr(&self.tokens, pos);
+            parsed = self.parse_binding(&self.tokens, pos);
         }
 
         Ok(exprs)
+    }
+
+    fn parse_binding(&self, tokens: &[Token], pos: usize) -> Result<(Stmt, usize)> {
+        match (tokens.get(pos), tokens.get(pos + 1), tokens.get(pos + 2)) {
+            (Some(Token::Let), Some(Token::Ident(name)), Some(Token::Equal)) => {
+                let (expr, pos) = self.parse_expr(tokens, pos + 3)?;
+
+                Ok((Stmt::Binding(name.to_string(), expr), pos))
+            }
+            _ => Err(ErrorKind::UnexpectedEndOfInput(pos)) 
+        }
     }
 
     fn parse_expr(&self, tokens: &[Token], pos: usize) -> Result<(Expr, usize)> {

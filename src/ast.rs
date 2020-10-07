@@ -7,6 +7,11 @@ pub(crate) enum BinopKind {
 }
 
 #[derive(Clone, Debug)]
+pub(crate) enum Stmt {
+    Binding(String, Expr)
+}
+
+#[derive(Clone, Debug)]
 pub(crate) enum Expr {
     Number(i32),
     Binop(BinopKind, Box<Expr>, Box<Expr>),
