@@ -46,7 +46,10 @@ pub(crate) enum Instr {
 
 #[cfg(test)]
 mod test {
-    use crate::{frame::Frame, Inter, Result};
+    use crate::{
+        vm::{frame::Frame, Result}, 
+        Inter
+    };
 
     use super::{BinopKind, CompareKind, Instr, UnaryKind, Value};
 
