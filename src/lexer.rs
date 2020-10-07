@@ -4,7 +4,7 @@ type Result<T = ()> = std::result::Result<T, ErrorKind>;
 
 const SINGLE_CHAR_TOKENS: [char; 7] = ['(', ')', '+', '-', '*', '/', '='];
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Token {
     Number(i32),
     Ident(String),
@@ -135,5 +135,71 @@ impl Lexer {
             ident,
             results.into_iter().collect::<String>()
         ))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{Lexer, Token, Result};
+
+    macro_rules! lex_single_char_token {
+        ($token_name:ident, $token:expr, $token_symbol:expr) => {
+            #[test]
+            fn $token_name() -> Result {
+                let mut lexer = Lexer::new($token_symbol); 
+
+                assert_eq!(lexer.run()?, vec![$token]);
+
+                Ok(())
+            }
+        };
+    }
+
+    lex_single_char_token!(lexing_lbracket_works, Token::LBracket, "(");
+
+    lex_single_char_token!(lexing_rbracket_works, Token::RBracket, ")");
+
+    lex_single_char_token!(lexing_plus_works, Token::Plus, "+");
+
+    lex_single_char_token!(lexing_minus_works, Token::Minus, "-");
+
+    lex_single_char_token!(lexing_times_works, Token::Times, "*");
+
+    lex_single_char_token!(lexing_divide_works, Token::Divide, "/");
+
+    lex_single_char_token!(lexing_eq_works, Token::Equal, "=");
+
+    #[test]
+    fn lexing_numbers_works() -> Result {
+        let mut single_num_lexer = Lexer::new(&"1");
+
+        let mut multi_num_lexer = Lexer::new(&"3213");
+
+        assert_eq!(single_num_lexer.run()?, vec![Token::Number(1)]);
+
+        assert_eq!(multi_num_lexer.run()?, vec![Token::Number(3213)]);
+
+        Ok(())
+    }
+
+    #[test]
+    fn lexing_ident_works() -> Result {
+        let mut single_char_lexer = Lexer::new(&"x");
+
+        let mut multi_char_lexer = Lexer::new(&"heLLo");
+
+        let mut must_not_start_with_num_lexer = Lexer::new(&"3ff");
+
+        let mut can_contain_underscores = Lexer::new("x_y_z");
+
+        assert_eq!(single_char_lexer.run()?, vec![Token::Ident("x".to_string())]);
+
+        assert_eq!(multi_char_lexer.run()?, vec![Token::Ident("heLLo".to_string())]);
+
+        assert_eq!(must_not_start_with_num_lexer.run()?, vec![Token::Number(3), Token::Ident("ff".to_string())]); 
+
+        assert_eq!(can_contain_underscores.run()?, vec![Token::Ident("x_y_z".to_string())]); 
+
+        Ok(())
     }
 }
