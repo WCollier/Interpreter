@@ -1,3 +1,6 @@
+mod ast;
+mod lexer;
+mod parser;
 mod vm;
 
 use crate::vm::{
@@ -7,14 +10,32 @@ use crate::vm::{
     ErrorKind as VmErrorKind,
 };
 
+use crate::{
+    lexer::{ErrorKind as LexerErrorKind, Lexer},
+    parser::{ErrorKind as ParserErrorKind, Parser},
+};
+
 type Result<T = ()> = std::result::Result<T, ErrorKind>;
 
 #[derive(Debug)]
 pub(crate) enum ErrorKind {
     VmError(VmErrorKind),
+    LexerError(LexerErrorKind),
+    ParserError(ParserErrorKind),
 }
 
 fn main() -> Result {
+    let mut lexer = Lexer::new("(400+400)*2");
+
+    let parser = Parser::new(lexer.run().map_err(|err| ErrorKind::LexerError(err))?);
+
+    let parse = parser.parse().map_err(|err| ErrorKind::ParserError(err))?;
+
+    println!("{:?}", parse);
+
+    Ok(())
+
+    /*
     let mut inter = Inter::new().map_err(|err| ErrorKind::VmError(err))?;
 
     /*
@@ -57,4 +78,5 @@ fn main() -> Result {
     */
 
     inter.run().map_err(|err| ErrorKind::VmError(err))
+        */
 }
