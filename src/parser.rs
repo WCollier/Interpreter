@@ -34,7 +34,7 @@ impl Parser {
         Ok(exprs)
     }
 
-    fn parse_expr(&self, tokens: &Vec<Token>, pos: usize) -> Result<(Expr, usize)> {
+    fn parse_expr(&self, tokens: &[Token], pos: usize) -> Result<(Expr, usize)> {
         let (left, pos) = self.parse_term(tokens, pos)?;
 
         match tokens.get(pos) {
@@ -58,7 +58,7 @@ impl Parser {
         }
     }
 
-    fn parse_term(&self, tokens: &Vec<Token>, pos: usize) -> Result<(Expr, usize)> {
+    fn parse_term(&self, tokens: &[Token], pos: usize) -> Result<(Expr, usize)> {
         let (left, pos) = self.parse_literal(tokens, pos)?;
 
         match tokens.get(pos) {
@@ -82,7 +82,7 @@ impl Parser {
         }
     }
 
-    fn parse_literal(&self, tokens: &Vec<Token>, pos: usize) -> Result<(Expr, usize)> {
+    fn parse_literal(&self, tokens: &[Token], pos: usize) -> Result<(Expr, usize)> {
         match tokens.get(pos) {
             Some(Token::LBracket) => {
                 self.parse_expr(tokens, pos + 1)
