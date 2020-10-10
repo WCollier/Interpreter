@@ -4,7 +4,7 @@ use super::{
     frame::{Frame, Scope},
     instr::Instr,
     instr::{BinopKind, CompareKind, UnaryKind},
-    stack::Stack,
+    stack::{Stack, StackKind},
     value::Value,
     ErrorKind, Result,
 };
@@ -14,21 +14,27 @@ pub(crate) struct Evaluator {
     pub(crate) pc: usize,
     pub(crate) running: bool,
     pub(crate) globals: HashMap<String, Value>,
-}
-
-impl default::Default for Evaluator {
-    fn default() -> Self {
-        Self {
-            pc: 0,
-            running: true,
-            globals: HashMap::default(),
-        }
-    }
+    pub(crate) frames: Stack<Frame>,
 }
 
 impl Evaluator {
-    pub(crate) fn eval(&mut self, frame: &mut Frame, instr: &Instr) -> Result {
+    pub(crate) fn new() -> Result<Self> {
+        let mut evaler = Self {
+            pc: 0,
+            running: true,
+            globals: HashMap::default(),
+            frames: Stack::new(StackKind::Frame),
+        };
+
+        evaler.frames.push(Frame::new()?)?;
+
+        Ok(evaler)
+    }
+
+    pub(crate) fn eval(&mut self, instr: &Instr) -> Result {
         self.pc += 1;
+
+        let frame = self.frames.top_mut()?;
 
         match *instr {
             Instr::Binop(kind) => match kind {
@@ -109,8 +115,8 @@ impl Evaluator {
 
                 Ok(())
             }
-            Instr::PopJumpFalse(new_pc) => self.eval_pop_jump(frame, new_pc, |val| !val),
-            Instr::PopJumpTrue(new_pc) => self.eval_pop_jump(frame, new_pc, |val| val),
+            Instr::PopJumpFalse(new_pc) => self.eval_pop_jump(new_pc, |val| !val),
+            Instr::PopJumpTrue(new_pc) => self.eval_pop_jump(new_pc, |val| val),
             Instr::Store(ref name) => {
                 // TODO: Try and remove clone() here
                 //frame.blocks.top_mut()?.locals.insert(name.to_string(), frame.vals.pop()?);
@@ -203,11 +209,11 @@ impl Evaluator {
         }
     }
 
-    fn eval_pop_jump<F>(&mut self, frame: &mut Frame, new_pc: usize, eval_fn: F) -> Result
+    fn eval_pop_jump<F>(&mut self, new_pc: usize, eval_fn: F) -> Result
     where
         F: FnOnce(bool) -> bool,
     {
-        let top = frame.vals.pop()?;
+        let top = self.frames.top_mut()?.vals.pop()?;
 
         match top {
             Value::Bool(val) => {
