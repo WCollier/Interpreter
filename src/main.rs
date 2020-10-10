@@ -25,7 +25,8 @@ pub(crate) enum ErrorKind {
 }
 
 fn main() -> Result {
-    let mut lexer = Lexer::new("(400+400)*2");
+    /*
+    let mut lexer = Lexer::new("let example = 100+100*200/300");
 
     let parser = Parser::new(lexer.run().map_err(|err| ErrorKind::LexerError(err))?);
 
@@ -34,8 +35,8 @@ fn main() -> Result {
     println!("{:?}", parse);
 
     Ok(())
+    */
 
-    /*
     let mut inter = Inter::new().map_err(|err| ErrorKind::VmError(err))?;
 
     /*
@@ -78,5 +79,4 @@ fn main() -> Result {
     */
 
     inter.run().map_err(|err| ErrorKind::VmError(err))
-        */
 }
